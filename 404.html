@@ -1,208 +1,313 @@
-/**
- * SEO FACTORY v4 — CONVERSION OPTIMIZED INDUSTRIAL ENGINE
- * - 50,000 pages
- * - FULL affiliate landing page structure
- * - Hero + CTA + Disclosure + FAQ + Testimonials
- * - Internal silo linking graph
- * - CTR + ranking simulation
- * - Sitemap index splitting
- * - UNIQUE content per page
- */
-
-const fs = require("fs");
+const fs = require("fs/promises");
 const path = require("path");
 const slugify = require("slugify");
+const crypto = require("crypto");
 
-// ===============================
-// CONFIG (DOUBLED + CONVERSION OPTIMIZED)
-// ===============================
+// ======================================
+// CONFIG
+// ======================================
+
 const CONFIG = {
   totalPages: 50000,
 
-  brand: "Brightlane",
+  outputDir: "output",
 
-  affiliateText:
-    "Affiliate Disclosure: We earn a commission if you sign up via our links at no extra cost to you.",
+  domain: "https://example.com",
+
+  brand: "Brightlane",
 
   ctaLink: "https://try.monday.com/m1dglo0ttcfr",
 
+  affiliateDisclosure:
+    "Affiliate Disclosure: We may earn commissions from qualifying purchases.",
+
+  sitemapChunkSize: 5000,
+
   silos: [
-    "project-management",
-    "kanban-software",
-    "workflow-automation",
-    "ai-productivity",
-    "task-management",
-    "business-os",
-    "team-collaboration",
-    "workflow-intelligence",
-    "enterprise-workflow",
-    "startup-tools"
+    "project management",
+    "kanban software",
+    "workflow automation",
+    "AI productivity",
+    "task management",
+    "business OS",
+    "team collaboration",
+    "enterprise workflow",
+    "startup tools",
+    "agile planning"
   ],
 
   intents: [
-    "buyer",
-    "informational",
-    "comparison",
     "review",
-    "alternatives",
-    "case-study",
     "pricing",
-    "best-tools"
+    "comparison",
+    "alternatives",
+    "best tools",
+    "guide",
+    "software",
+    "platform"
   ],
 
   modifiers: [
-    "best","free","2026","for teams","for startups",
-    "enterprise","pricing","alternatives","advanced",
-    "AI-powered","scalable","next-gen","top","ultimate"
+    "best",
+    "top",
+    "advanced",
+    "AI powered",
+    "enterprise",
+    "free",
+    "scalable",
+    "modern",
+    "next gen",
+    "2026"
+  ],
+
+  audiences: [
+    "for startups",
+    "for agencies",
+    "for remote teams",
+    "for enterprises",
+    "for developers",
+    "for marketing teams",
+    "for operations",
+    "for SMBs"
   ]
 };
 
-// ===============================
-// STORAGE
-// ===============================
-let pages = [];
+// ======================================
+// HELPERS
+// ======================================
 
-// ===============================
-// RANDOM ENGINE
-// ===============================
-const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-
-// ===============================
-// FAQ ENGINE (REAL VARIATION)
-// ===============================
-function faq(keyword) {
-  return `
-  <div class="faq">
-    <details><summary>What is ${keyword}?</summary>
-      <p>${keyword} is a modern software solution designed for productivity and workflow automation.</p>
-    </details>
-
-    <details><summary>Is ${keyword} worth it in 2026?</summary>
-      <p>Yes. It is widely used by startups and enterprises scaling digital operations.</p>
-    </details>
-
-    <details><summary>Who uses ${keyword}?</summary>
-      <p>Teams in marketing, product, operations, and engineering use ${keyword} daily.</p>
-    </details>
-
-    <details><summary>Does ${keyword} improve productivity?</summary>
-      <p>Yes. It centralizes workflows, automates tasks, and improves visibility.</p>
-    </details>
-  </div>
-  `;
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
 }
 
-// ===============================
-// TESTIMONIAL ENGINE
-// ===============================
-function testimonials(keyword) {
-  const t = [
-    `"${keyword} increased our productivity by 3x." – SaaS Founder`,
-    `"We replaced multiple tools with ${keyword}." – Operations Manager`,
-    `"Best system we've used for scaling workflows." – Product Lead`,
-    `"A must-have for modern teams." – Startup CEO`
-  ];
-
-  return `
-    <div class="card">${pick(t)}</div>
-    <div class="card">${pick(t)}</div>
-    <div class="card">${pick(t)}</div>
-  `;
+function hash(input) {
+  return crypto.createHash("md5").update(input).digest("hex").slice(0, 8);
 }
 
-// ===============================
-// HERO BLOCK (CONVERSION CORE)
-// ===============================
-function hero(keyword) {
-  return `
-  <div class="hero">
-    <h1>${keyword}</h1>
-    <p>Maximize productivity with modern workflow automation and AI-powered tools.</p>
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
 
-    <a class="cta" href="${CONFIG.ctaLink}" target="_blank">
-      Start Free Trial
+// ======================================
+// CONTENT VARIATION ENGINE
+// ======================================
+
+const intros = [
+  "Modern companies rely on {keyword} to streamline workflows.",
+  "{keyword} has become essential for scaling operations.",
+  "Teams use {keyword} to improve productivity and collaboration.",
+  "{keyword} helps reduce operational bottlenecks."
+];
+
+const benefits = [
+  "Automates repetitive workflows",
+  "Improves cross-team visibility",
+  "Centralizes project execution",
+  "Enhances operational efficiency",
+  "Supports AI-assisted productivity"
+];
+
+const ctas = [
+  "Start Free Trial",
+  "Try It Today",
+  "Get Started",
+  "Launch Your Workspace"
+];
+
+function spin(template, vars) {
+  return template.replace(/\{(\w+)\}/g, (_, k) => vars[k] || "");
+}
+
+function generateKeyword() {
+  return [
+    pick(CONFIG.modifiers),
+    pick(CONFIG.silos),
+    pick(CONFIG.audiences)
+  ].join(" ");
+}
+
+function buildContent(keyword, intent) {
+  const intro = spin(pick(intros), { keyword });
+
+  const uniqueBenefits = [...benefits]
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 4);
+
+  return `
+<section>
+  <h2>Why ${escapeHtml(keyword)} Matters</h2>
+  <p>${escapeHtml(intro)}</p>
+
+  <h3>Key Benefits</h3>
+  <ul>
+    ${uniqueBenefits.map(b => `<li>${escapeHtml(b)}</li>`).join("")}
+  </ul>
+
+  <h3>${escapeHtml(intent)} Insights</h3>
+  <p>
+    ${escapeHtml(keyword)} enables organizations to improve execution speed,
+    automate workflows, and reduce operational overhead.
+  </p>
+
+  <div class="cta-wrap">
+    <a class="cta" href="${CONFIG.ctaLink}" target="_blank" rel="nofollow sponsored">
+      ${pick(ctas)}
     </a>
-
-    <div class="disclosure">
-      ${CONFIG.affiliateText}
-    </div>
   </div>
-  `;
+</section>
+`;
 }
 
-// ===============================
-// CONTENT ENGINE (UNIQUE PER PAGE)
-// ===============================
-function content(keyword, silo, intent) {
+// ======================================
+// INTERNAL LINKING
+// ======================================
 
-  const intro = pick([
-    `${keyword} is rapidly becoming essential in modern digital workflows.`,
-    `Businesses rely on ${keyword} to improve efficiency and scale operations.`,
-    `${keyword} is widely used across ${intent} use cases.`,
-    `Modern teams adopt ${keyword} for automation and collaboration.`
-  ]);
+function generateInternalLinks(currentSlug, pages) {
+  const links = [];
+
+  for (let i = 0; i < 5; i++) {
+    const p = pick(pages);
+
+    if (!p || p.slug === currentSlug) continue;
+
+    links.push(`
+      <li>
+        <a href="/${p.slug}.html">${escapeHtml(p.keyword)}</a>
+      </li>
+    `);
+  }
 
   return `
-    <h2>Why ${keyword} matters</h2>
-    <p>${intro}</p>
-
-    <h3>Key Benefits</h3>
-    <ul>
-      <li>Workflow automation</li>
-      <li>Team collaboration</li>
-      <li>AI productivity enhancement</li>
-      <li>Scalable business systems</li>
-    </ul>
-
-    <h3>Real Customer Results</h3>
-    ${testimonials(keyword)}
-
-    <h3>FAQ</h3>
-    ${faq(keyword)}
-
-    <h3>Why choose it?</h3>
-    <p>${keyword} helps companies reduce operational complexity and improve execution speed.</p>
-
-    <a class="cta" href="${CONFIG.ctaLink}" target="_blank">
-      Get Started Now
-    </a>
-  `;
+<section>
+  <h3>Related Resources</h3>
+  <ul>
+    ${links.join("")}
+  </ul>
+</section>
+`;
 }
 
-// ===============================
-// HTML TEMPLATE (FULL AFFILIATE PAGE)
-// ===============================
-function template(title, body) {
+// ======================================
+// STRUCTURED DATA
+// ======================================
+
+function schema(keyword) {
+  return `
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"Review",
+  "name":"${escapeHtml(keyword)}",
+  "author":{
+    "@type":"Organization",
+    "name":"${CONFIG.brand}"
+  }
+}
+</script>
+`;
+}
+
+// ======================================
+// PAGE TEMPLATE
+// ======================================
+
+function template({ title, description, slug, content, links }) {
   return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>${title}</title>
-<meta name="description" content="${title} review and guide">
-<meta name="robots" content="index, follow">
+
+<meta charset="UTF-8" />
+
+<title>${escapeHtml(title)}</title>
+
+<meta name="description" content="${escapeHtml(description)}">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="canonical" href="${CONFIG.domain}/${slug}.html">
+
+<meta name="robots" content="index,follow">
+
+${schema(title)}
 
 <style>
-body{font-family:Arial;background:#0b0b10;color:#fff;margin:0;padding:0}
-.container{padding:20px;max-width:900px;margin:auto}
-.hero{background:linear-gradient(135deg,#00c6ff,#0072ff);padding:40px;text-align:center}
-.cta{display:inline-block;background:#ff4d4d;color:#fff;padding:12px 20px;margin-top:15px;border-radius:8px;text-decoration:none;font-weight:bold}
-.card{background:#1b1b2a;padding:10px;margin:10px 0;border-radius:10px}
-.faq details{background:#1b1b2a;padding:10px;margin:10px 0;border-radius:8px}
-.disclosure{font-size:12px;margin-top:10px;opacity:0.8}
-footer{margin-top:40px;text-align:center;font-size:12px;color:#aaa}
+body{
+  font-family:Arial;
+  background:#0f1117;
+  color:#fff;
+  line-height:1.6;
+  margin:0;
+}
+
+.container{
+  max-width:1000px;
+  margin:auto;
+  padding:30px;
+}
+
+.hero{
+  background:linear-gradient(135deg,#0066ff,#00c6ff);
+  padding:60px 20px;
+  text-align:center;
+}
+
+.cta{
+  display:inline-block;
+  background:#ff4d4d;
+  color:#fff;
+  padding:14px 24px;
+  border-radius:10px;
+  text-decoration:none;
+  font-weight:bold;
+}
+
+section{
+  margin:40px 0;
+}
+
+footer{
+  margin-top:60px;
+  opacity:.7;
+  font-size:13px;
+}
 </style>
+
 </head>
 
 <body>
 
-${hero(title)}
+<div class="hero">
+  <h1>${escapeHtml(title)}</h1>
+
+  <p>
+    Discover how ${escapeHtml(title)} improves modern workflows.
+  </p>
+
+  <a class="cta"
+     href="${CONFIG.ctaLink}"
+     target="_blank"
+     rel="nofollow sponsored">
+     ${pick(ctas)}
+  </a>
+
+  <p style="margin-top:15px;font-size:12px">
+    ${CONFIG.affiliateDisclosure}
+  </p>
+</div>
 
 <div class="container">
 
-${body}
+${content}
+
+${links}
 
 <footer>
-© 2026 ${CONFIG.brand}. All rights reserved.
+© 2026 ${CONFIG.brand}
 </footer>
 
 </div>
@@ -212,45 +317,110 @@ ${body}
 `;
 }
 
-// ===============================
-// GENERATOR
-// ===============================
+// ======================================
+// SITEMAPS
+// ======================================
+
+async function generateSitemaps(urls) {
+  const chunks = [];
+
+  for (let i = 0; i < urls.length; i += CONFIG.sitemapChunkSize) {
+    chunks.push(urls.slice(i, i + CONFIG.sitemapChunkSize));
+  }
+
+  const sitemapFiles = [];
+
+  for (let i = 0; i < chunks.length; i++) {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${chunks[i]
+  .map(
+    url => `
+<url>
+  <loc>${url}</loc>
+</url>`
+  )
+  .join("")}
+</urlset>`;
+
+    const file = `sitemap-${i}.xml`;
+
+    await fs.writeFile(file, xml);
+
+    sitemapFiles.push(file);
+  }
+
+  const index = `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${sitemapFiles
+  .map(
+    f => `
+<sitemap>
+  <loc>${CONFIG.domain}/${f}</loc>
+</sitemap>`
+  )
+  .join("")}
+</sitemapindex>`;
+
+  await fs.writeFile("sitemap.xml", index);
+}
+
+// ======================================
+// MAIN GENERATOR
+// ======================================
+
 async function generate() {
+  await fs.mkdir(CONFIG.outputDir, { recursive: true });
 
-  if (!fs.existsSync("output")) fs.mkdirSync("output");
+  const urls = [];
+  const pageRefs = [];
 
-  let count = 0;
+  for (let i = 0; i < CONFIG.totalPages; i++) {
+    const keyword = generateKeyword();
 
-  for (let silo of CONFIG.silos) {
-    for (let mod of CONFIG.modifiers) {
-      for (let intent of CONFIG.intents) {
+    const intent = pick(CONFIG.intents);
 
-        if (count >= CONFIG.totalPages) break;
+    const slug = slugify(
+      `${keyword}-${intent}-${hash(keyword + i)}`,
+      { lower: true, strict: true }
+    );
 
-        const keyword = `${mod} ${silo}`;
-        const slug = slugify(`${keyword}-${intent}-${count}`);
+    pageRefs.push({
+      slug,
+      keyword
+    });
+  }
 
-        const pageBody = content(keyword, silo, intent);
-        const html = template(keyword, pageBody);
+  for (let i = 0; i < pageRefs.length; i++) {
+    const page = pageRefs[i];
 
-        fs.writeFileSync(
-          path.join("output", slug + ".html"),
-          html
-        );
+    const content = buildContent(page.keyword, pick(CONFIG.intents));
 
-        pages.push({
-          slug,
-          keyword,
-          silo
-        });
+    const links = generateInternalLinks(page.slug, pageRefs);
 
-        count++;
-      }
+    const html = template({
+      title: page.keyword,
+      description: `${page.keyword} review, pricing, features, and comparisons.`,
+      slug: page.slug,
+      content,
+      links
+    });
+
+    await fs.writeFile(
+      path.join(CONFIG.outputDir, `${page.slug}.html`),
+      html
+    );
+
+    urls.push(`${CONFIG.domain}/${page.slug}.html`);
+
+    if (i % 1000 === 0) {
+      console.log(`Generated ${i}/${CONFIG.totalPages}`);
     }
   }
 
-  console.log("🚀 SEO FACTORY v4 COMPLETE (CONVERSION MODE)");
-  console.log("Pages generated:", count);
+  await generateSitemaps(urls);
+
+  console.log("DONE");
 }
 
-generate();
+generate().catch(console.error);
